@@ -8,3 +8,5 @@ description = "A gravitational n-body solver"
 
 [dependencies]
 clap = { version = "3.1.14", features = ["derive"] }
+serde = { version = "1.0.137", features = ["derive"] }
+serde_json = { version = "1.0.80" }
