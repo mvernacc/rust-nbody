@@ -3,6 +3,7 @@ name = "nbody"
 version = "0.1.0"
 edition = "2021"
 description = "A gravitational n-body solver"
+rust-version = "1.59"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -10,3 +11,4 @@ description = "A gravitational n-body solver"
 clap = { version = "3.1.14", features = ["derive"] }
 serde = { version = "1.0.137", features = ["derive"] }
 serde_json = { version = "1.0.80" }
+ndarray = { version = "0.15.4"}
