@@ -40,7 +40,7 @@ fn main() {
 
     let n_bodies = input.bodies.len();
 
-    let mut masses: Array1<f64> = Array::zeros(3 * n_bodies);
+    let mut masses: Array1<f64> = Array::zeros(n_bodies);
     let mut x_init: Array1<f64> = Array::zeros(3 * n_bodies);
     let mut v_init: Array1<f64> = Array::zeros(3 * n_bodies);
 
@@ -52,13 +52,18 @@ fn main() {
         }
     }
 
-    let intgr = LeapfrogIntegrator::new(
+    let mut intgr = LeapfrogIntegrator::new(
         input.dt_s,
         input.n_steps,
         &masses,
         &x_init,
         &v_init,
     );
+
+    intgr.integrate();
+
+    println!("{:?}", intgr.v);
+
 }
 
 // fn calc_grav_force(mass_1: f64, mass_2: f64, r_1: [f64; 3], r_2: [f64; 3]) -> [f64; 3] {
