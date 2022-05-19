@@ -45,6 +45,9 @@ impl LeapfrogIntegrator {
         let dt2 = self.dt * self.dt;
         let mut x_current: Array1<f64> = Array::zeros(self.n_states);
         let mut v_current: Array1<f64> = Array::zeros(self.n_states);
+        // `forces[i, j, k]` is the gravitational force between bodies `i` and `j` along direction `k`.
+        // [units: N] 
+        let mut forces: Array3<f64> = Array::zeros((self.n_states / 3, self.n_states / 3, 3));
 
         // Compute accelerations at the initial conditions.
         // TODO
@@ -75,4 +78,51 @@ impl LeapfrogIntegrator {
             );
         }
     }
+
+    fn update_grav_forces_all_bodies(&self, forces: &mut Array3<f64>, x: &Array1<f64>, masses: &Array1<f64>) {
+        let n_bodies = masses.len();
+        assert_eq!(x.len(), 3 * n_bodies);
+        assert_eq!(forces.shape()[0], n_bodies);
+        assert_eq!(forces.shape()[1], n_bodies);
+        assert_eq!(forces.shape()[2], 3);
+
+        let mut r_i: [f64; 3] = Default::default();
+        let mut r_j: [f64; 3] = Default::default();
+    
+        for i in 0..n_bodies {
+            for k in 0..3 {
+                r_i[k] = x[3 * i + k];
+            }
+            for j in 0..i {
+                for k in 0..3 {
+                    r_j[k] = x[3 * j + k];
+                }
+                forces
+                    .slice_mut(s![i, j, ..])
+                    .assign(calc_grav_force_two_bodies(self.masses[i], self.masses[j], r_i, r_j))
+            }
+        }
+    
+    }
+
+
+}
+
+/// Gravitational constant [units: N m^2 kg^-1].
+const G: f64 = 6.6743015e-11;
+
+
+
+fn calc_grav_force_two_bodies(mass_1: f64, mass_2: f64, r_1: [f64; 3], r_2: [f64; 3]) -> [f64; 3] {
+    // Position vector from body 1 center to body 2 center [units: m].
+    let r_1to2 = [r_1[0] - r_2[0], r_1[1] - r_2[1], r_1[2] - r_2[2]];
+    // Distance between body 1 and 2, to the third power [units: m^3]
+    let distance_cubed = (r_1to2[0] * r_1to2[0] + r_1to2[1] * r_1to2[1] + r_1to2[2] * r_1to2[2]).powf(3.0 / 2.0);
+    let gmm_over_dist_cubed = G * mass_1 * mass_2 / distance_cubed;
+    // Gravitational force of body 2 on body 1 [units: N].
+    [
+        gmm_over_dist_cubed * r_1to2[0],
+        gmm_over_dist_cubed * r_1to2[1],
+        gmm_over_dist_cubed * r_1to2[2],
+    ]
 }

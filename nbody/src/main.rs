@@ -65,7 +65,3 @@ fn main() {
     println!("{:?}", intgr.v);
 
 }
-
-// fn calc_grav_force(mass_1: f64, mass_2: f64, r_1: [f64; 3], r_2: [f64; 3]) -> [f64; 3] {
-
-// }
