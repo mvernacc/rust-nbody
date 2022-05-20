@@ -8,7 +8,7 @@ pub struct LeapfrogIntegrator {
     pub n_steps: usize,
     pub n_states: usize,
     pub masses: Array1<f64>,
-    pub x: Array2<f64>,
+    pub r: Array2<f64>,
     pub v: Array2<f64>,
     pub a: Array2<f64>,
     /// `forces[i, j, k]` is the gravitational force between bodies `i` and `j` along direction `k`.
@@ -22,19 +22,19 @@ impl LeapfrogIntegrator {
         dt: f64,
         n_steps: usize,
         masses: &Array1<f64>,
-        x_init: &Array1<f64>,
+        r_init: &Array1<f64>,
         v_init: &Array1<f64>,
     ) -> Self {
         let n_states = 3 * masses.len();
-        assert_eq!(n_states, x_init.len());
+        assert_eq!(n_states, r_init.len());
         assert_eq!(n_states, v_init.len());
 
-        let mut x: Array2<f64> = Array::zeros((n_steps, n_states));
+        let mut r: Array2<f64> = Array::zeros((n_steps, n_states));
         let mut v: Array2<f64> = Array::zeros((n_steps, n_states));
         let a: Array2<f64> = Array::zeros((n_steps, n_states));
         let forces: Array3<f64> = Array::zeros((masses.len(), masses.len(), 3));
 
-        x.slice_mut(s![0usize, ..]).assign(x_init);
+        r.slice_mut(s![0usize, ..]).assign(r_init);
         v.slice_mut(s![0usize, ..]).assign(v_init);
 
         Self {
@@ -42,7 +42,7 @@ impl LeapfrogIntegrator {
             n_steps,
             n_states,
             masses: masses.clone(),
-            x,
+            r,
             v,
             a,
             forces,
@@ -58,7 +58,7 @@ impl LeapfrogIntegrator {
     ///         http://www.artcompsci.org/vol_1/v1_web/v1_web.html (accessed May 18, 2022).
     pub fn integrate(&mut self) {
         let dt2 = self.dt * self.dt;
-        let mut x_current: Array1<f64> = Array::zeros(self.n_states);
+        let mut r_current: Array1<f64> = Array::zeros(self.n_states);
         let mut v_current: Array1<f64> = Array::zeros(self.n_states);
 
         // Compute accelerations at the initial conditions.
@@ -67,9 +67,9 @@ impl LeapfrogIntegrator {
 
         for i in 0..self.n_steps - 1 {
             // Compute positions at the next time step i + 1.
-            x_current.assign(&self.x.slice(s![i, ..]));
-            self.x.slice_mut(s![i + 1, ..]).assign(
-                &(&x_current
+            r_current.assign(&self.r.slice(s![i, ..]));
+            self.r.slice_mut(s![i + 1, ..]).assign(
+                &(&r_current
                     + self.dt * &self.v.slice(s![i, ..])
                     + 0.5 * dt2 * &self.a.slice(s![i, ..])),
             );
@@ -117,7 +117,7 @@ impl LeapfrogIntegrator {
 
     fn update_grav_forces_all_bodies(&mut self, step_index: usize) {
         let n_bodies = self.masses.len();
-        assert_eq!(self.x.shape()[1], 3 * n_bodies);
+        assert_eq!(self.r.shape()[1], 3 * n_bodies);
         assert_eq!(self.forces.shape()[0], n_bodies);
         assert_eq!(self.forces.shape()[1], n_bodies);
         assert_eq!(self.forces.shape()[2], 3);
@@ -128,12 +128,12 @@ impl LeapfrogIntegrator {
         for i in 0..n_bodies {
             #[allow(clippy::needless_range_loop)]
             for k in 0..3 {
-                r_i[k] = self.x[[step_index, 3 * i + k]];
+                r_i[k] = self.r[[step_index, 3 * i + k]];
             }
             for j in 0..i {
                 #[allow(clippy::needless_range_loop)]
                 for k in 0..3 {
-                    r_j[k] = self.x[[step_index, 3 * j + k]];
+                    r_j[k] = self.r[[step_index, 3 * j + k]];
                 }
                 let f_ij = gravity::calc_grav_force_two_bodies(self.masses[i], self.masses[j], r_i, r_j);
                 #[allow(clippy::needless_range_loop)]

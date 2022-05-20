@@ -42,13 +42,13 @@ fn main() {
     let n_bodies = input.bodies.len();
 
     let mut masses: Array1<f64> = Array::zeros(n_bodies);
-    let mut x_init: Array1<f64> = Array::zeros(3 * n_bodies);
+    let mut r_init: Array1<f64> = Array::zeros(3 * n_bodies);
     let mut v_init: Array1<f64> = Array::zeros(3 * n_bodies);
 
     for (i, b) in input.bodies.iter().enumerate() {
         masses[i] = b.mass_kg;
         for dim in 0..3 {
-            x_init[3 * i + dim] = b.position_init_m[dim];
+            r_init[3 * i + dim] = b.position_init_m[dim];
             v_init[3 * i + dim] = b.velocity_init_m_per_s[dim];
         }
     }
@@ -57,7 +57,7 @@ fn main() {
         input.dt_s,
         input.n_steps,
         &masses,
-        &x_init,
+        &r_init,
         &v_init,
     );
 
