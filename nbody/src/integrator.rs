@@ -1,6 +1,7 @@
 use ndarray::prelude::*;
 use ndarray::{Array, Array1, Array2};
 
+use super::NBodyInput;
 use super::gravity;
 
 pub struct LeapfrogIntegrator {
@@ -18,24 +19,25 @@ pub struct LeapfrogIntegrator {
 }
 
 impl LeapfrogIntegrator {
-    pub fn new(
-        dt: f64,
-        n_steps: usize,
-        masses: &Array1<f64>,
-        r_init: &Array1<f64>,
-        v_init: &Array1<f64>,
-    ) -> Self {
-        let n_states = 3 * masses.len();
-        assert_eq!(n_states, r_init.len());
-        assert_eq!(n_states, v_init.len());
+    pub fn new(input: &NBodyInput) -> Self {
+        let n_bodies = input.bodies.len();
+        let n_states = 3 * n_bodies;
+        let dt = input.timestep_s;
+        let n_steps = input.n_steps;
 
-        let mut r: Array2<f64> = Array::zeros((n_steps, n_states));
-        let mut v: Array2<f64> = Array::zeros((n_steps, n_states));
-        let a: Array2<f64> = Array::zeros((n_steps, n_states));
+        let mut masses: Array1<f64> = Array::zeros(n_bodies);
+        let mut r: Array2<f64> = Array::zeros((input.n_steps, n_states));
+        let mut v: Array2<f64> = Array::zeros((input.n_steps, n_states));
+        let a: Array2<f64> = Array::zeros((input.n_steps, n_states));
         let forces: Array3<f64> = Array::zeros((masses.len(), masses.len(), 3));
 
-        r.slice_mut(s![0usize, ..]).assign(r_init);
-        v.slice_mut(s![0usize, ..]).assign(v_init);
+        for (i, b) in input.bodies.iter().enumerate() {
+            masses[i] = b.mass_kg;
+            for dim in 0..3 {
+                r[[0, 3 * i + dim]] = b.position_init_m[dim];
+                v[[0, 3 * i + dim]] = b.velocity_init_m_per_s[dim];
+            }
+        }
 
         Self {
             dt,
@@ -142,5 +144,43 @@ impl LeapfrogIntegrator {
                 }
             }
         }
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::{NBodyInput, Body};
+
+    use super::LeapfrogIntegrator;
+
+    #[test]
+    fn one_body_straight_line() {
+        // Setup
+        let test_mass = Body {
+            name: "Test Mass".to_string(),
+            mass_kg: 1.0,
+            position_init_m: [0.0, 0.0, 0.0],
+            velocity_init_m_per_s: [1.0, 0.0, 0.0],
+        };
+        let input = NBodyInput {
+            bodies: vec![test_mass],
+            timestep_s: 0.1,
+            n_steps: 11,
+        };
+        let mut integrator = LeapfrogIntegrator::new(&input);
+
+        // Action
+        integrator.integrate();
+
+        // Verification
+        // final velocity == [1, 0, 0]
+        assert_eq!(integrator.v[[input.n_steps - 1, 0]], 1.0);
+        assert_eq!(integrator.v[[input.n_steps - 1, 1]], 0.0);
+        assert_eq!(integrator.v[[input.n_steps - 1, 2]], 0.0);
+        // final position == [1, 0, 0]
+        assert!((integrator.r[[input.n_steps - 1, 0]] - 1.0) < 1e-9);
+        assert_eq!(integrator.r[[input.n_steps - 1, 1]], 0.0);
+        assert_eq!(integrator.r[[input.n_steps - 1, 2]], 0.0);
     }
 }

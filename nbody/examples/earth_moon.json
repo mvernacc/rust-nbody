@@ -13,6 +13,6 @@
             "velocity_init_m_per_s": [0.0, 1.07e3, 0.0]
         }
     ],
-    "dt_s": 100,
+    "timestep_s": 100,
     "n_steps": 10
 }
