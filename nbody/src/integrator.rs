@@ -153,7 +153,10 @@ mod tests {
     use crate::{NBodyInput, Body};
 
     use super::LeapfrogIntegrator;
+    use ndarray::prelude::*;
+    use approx::assert_relative_eq;
 
+    /// Check that a lone test mass moves in a straight line at constant velocity.
     #[test]
     fn one_body_straight_line() {
         // Setup
@@ -179,8 +182,79 @@ mod tests {
         assert_eq!(integrator.v[[input.n_steps - 1, 1]], 0.0);
         assert_eq!(integrator.v[[input.n_steps - 1, 2]], 0.0);
         // final position == [1, 0, 0]
-        assert!((integrator.r[[input.n_steps - 1, 0]] - 1.0) < 1e-9);
+        assert_relative_eq!(integrator.r[[input.n_steps - 1, 0]], 1.0, epsilon = 1e-9);
         assert_eq!(integrator.r[[input.n_steps - 1, 1]], 0.0);
         assert_eq!(integrator.r[[input.n_steps - 1, 2]], 0.0);
+    }
+
+    /// Check that a light test mass, tossed sideways near the surface of the Earth, follows a
+    /// parabolic trajectory, and does not move the Earth.
+    #[test]
+    fn test_mass_earth_parabolic_trajectory() {
+        // Setup
+        // -----
+        let mass_earth = 5.9722e24; // [kg]
+        let radius_earth = 6371e3; // [m]
+        let g = 9.807; // [m s^-2]
+        let test_mass = Body {
+            name: "Test Mass".to_string(),
+            mass_kg: 1.0,
+            position_init_m: [0.0, 0.0, radius_earth],
+            velocity_init_m_per_s: [1.0, 0.0, 0.0],
+        };
+        let earth = Body {
+            name: "Earth".to_string(),
+            mass_kg: mass_earth,
+            position_init_m: [0.0, 0.0, 0.0],
+            velocity_init_m_per_s: [0.0, 0.0, 0.0],
+        };
+        let input = NBodyInput {
+            bodies: vec![earth, test_mass.clone()],
+            timestep_s: 0.1,
+            n_steps: 101,
+        };
+        let mut integrator = LeapfrogIntegrator::new(&input);
+
+        // Action
+        // ------
+        integrator.integrate();
+
+        // Verification
+        // ------------
+        // Calculate the horizontal and vertical displacements for a parabolic trajectory.
+        let duration: f64 = input.timestep_s * (input.n_steps - 1) as f64; // [s]
+        let vertical_displacement = -0.5 * g * duration * duration; // [m]
+        let horizontal_displacement = test_mass.velocity_init_m_per_s[0] * duration; // [m]
+        // Earth final velocity should be nil.
+        let v_earth_final = integrator.v.slice(s![input.n_steps - 1, 0usize..3usize]);
+        assert_relative_eq!(v_earth_final[0], 0.0);
+        assert_relative_eq!(v_earth_final[1], 0.0);
+        assert_relative_eq!(v_earth_final[2], 0.0);
+        // Earth final position should be [0, 0, 0].
+        let r_earth_final = integrator.r.slice(s![input.n_steps - 1, 0usize..3usize]);
+        assert_relative_eq!(r_earth_final[0], 0.0);
+        assert_relative_eq!(r_earth_final[1], 0.0);
+        assert_relative_eq!(r_earth_final[2], 0.0);
+        // Test mass final velocity should be increased by [0, 0, -duration * g]
+        let v_test_final = integrator.v.slice(s![input.n_steps - 1, 3usize..6usize]);
+        println!("{:?}", v_test_final);
+        let v_test_final_correct = [
+            test_mass.velocity_init_m_per_s[0],
+            test_mass.velocity_init_m_per_s[1],
+            test_mass.velocity_init_m_per_s[2] - duration * g,
+        ];
+        assert_relative_eq!(v_test_final[0], v_test_final_correct[0], max_relative = 1e-4);
+        assert_relative_eq!(v_test_final[1], v_test_final_correct[1]);
+        assert_relative_eq!(v_test_final[2], v_test_final_correct[2], max_relative = 5e-3);
+        // Test mass final position should be moved by the horizontal and vertical displacements.
+        let r_test_final = integrator.r.slice(s![input.n_steps - 1, 3usize..6usize]);
+        let r_test_final_correct = [
+            horizontal_displacement,
+            0.0,
+            radius_earth + vertical_displacement,
+        ];
+        assert_relative_eq!(r_test_final[0], r_test_final_correct[0], epsilon = 1e-3);
+        assert_relative_eq!(r_test_final[1], r_test_final_correct[1]);
+        assert_relative_eq!(r_test_final[2], r_test_final_correct[2], epsilon = 1.0);
     }
 }

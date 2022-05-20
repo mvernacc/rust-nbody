@@ -14,7 +14,7 @@ struct Args {
     bodies_path: std::path::PathBuf,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Body {
     pub name: String,
     pub mass_kg: f64,

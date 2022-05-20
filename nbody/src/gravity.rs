@@ -20,6 +20,7 @@ pub fn calc_grav_force_two_bodies(mass_1: f64, mass_2: f64, r_1: [f64; 3], r_2: 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use approx::assert_relative_eq;
 
     #[test]
     fn earth_surface_weight() {
@@ -41,6 +42,6 @@ mod tests {
         // Force on body one should be [0, 0, -one_kg * g]
         assert_eq!(force[0], 0.0);
         assert_eq!(force[1], 0.0);
-        assert!((force[2] + one_kg * g) < 1e-3);
+        assert_relative_eq!(force[2], -one_kg * g, max_relative = 1e-2);
     }
 }
