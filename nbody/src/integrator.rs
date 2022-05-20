@@ -1,6 +1,8 @@
 use ndarray::prelude::*;
 use ndarray::{Array, Array1, Array2};
 
+use super::gravity;
+
 pub struct LeapfrogIntegrator {
     pub dt: f64,
     pub n_steps: usize,
@@ -11,7 +13,7 @@ pub struct LeapfrogIntegrator {
     pub a: Array2<f64>,
     /// `forces[i, j, k]` is the gravitational force between bodies `i` and `j` along direction `k`.
     /// Used internally to avoid repeated calculations; overwritten at each time step.
-    /// [units: N] 
+    /// [units: N]
     forces: Array3<f64>,
 }
 
@@ -50,7 +52,7 @@ impl LeapfrogIntegrator {
     /// Integrate the n-body gravitation dynamics through time, using the Leapfrog algorithm.
     /// The "velocity at integer timesteps" formulation of Leapfrog is used, as given in [Hut2004],
     /// Ch 4.1, http://www.artcompsci.org/vol_1/v1_web/node34.html, equations 4.4 and 4.5.
-    /// 
+    ///
     /// References:
     ///     [Hut2004] P. Hut and J. Makino, "Moving Stars Around,"" The Art of Computational Science, 2004.
     ///         http://www.artcompsci.org/vol_1/v1_web/v1_web.html (accessed May 18, 2022).
@@ -98,7 +100,7 @@ impl LeapfrogIntegrator {
                     force_net[k] += self.forces[[i, j, k]];
                 }
             }
-            for j in i+1..n_bodies {
+            for j in i + 1..n_bodies {
                 #[allow(clippy::needless_range_loop)]
                 for k in 0..3 {
                     force_net[k] -= self.forces[[j, i, k]];
@@ -122,7 +124,7 @@ impl LeapfrogIntegrator {
 
         let mut r_i: [f64; 3] = Default::default();
         let mut r_j: [f64; 3] = Default::default();
-    
+
         for i in 0..n_bodies {
             #[allow(clippy::needless_range_loop)]
             for k in 0..3 {
@@ -133,7 +135,7 @@ impl LeapfrogIntegrator {
                 for k in 0..3 {
                     r_j[k] = self.x[[step_index, 3 * j + k]];
                 }
-                let f_ij = calc_grav_force_two_bodies(self.masses[i], self.masses[j], r_i, r_j);
+                let f_ij = gravity::calc_grav_force_two_bodies(self.masses[i], self.masses[j], r_i, r_j);
                 #[allow(clippy::needless_range_loop)]
                 for k in 0..3 {
                     self.forces[[i, j, k]] = f_ij[k];
@@ -141,22 +143,4 @@ impl LeapfrogIntegrator {
             }
         }
     }
-}
-
-/// Gravitational constant [units: N m^2 kg^-1].
-const G: f64 = 6.6743015e-11;
-
-
-fn calc_grav_force_two_bodies(mass_1: f64, mass_2: f64, r_1: [f64; 3], r_2: [f64; 3]) -> [f64; 3] {
-    // Position vector from body 1 center to body 2 center [units: m].
-    let r_1to2 = [r_1[0] - r_2[0], r_1[1] - r_2[1], r_1[2] - r_2[2]];
-    // Distance between body 1 and 2, to the third power [units: m^3]
-    let distance_cubed = (r_1to2[0] * r_1to2[0] + r_1to2[1] * r_1to2[1] + r_1to2[2] * r_1to2[2]).powf(3.0 / 2.0);
-    let gmm_over_dist_cubed = G * mass_1 * mass_2 / distance_cubed;
-    // Gravitational force of body 2 on body 1 [units: N].
-    [
-        -gmm_over_dist_cubed * r_1to2[0],
-        -gmm_over_dist_cubed * r_1to2[1],
-        -gmm_over_dist_cubed * r_1to2[2],
-    ]
 }

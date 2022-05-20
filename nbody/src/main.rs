@@ -4,6 +4,7 @@ use clap::Parser;
 use ndarray::{Array, Array1};
 use serde::{Deserialize, Serialize};
 
+mod gravity;
 mod integrator;
 use crate::integrator::LeapfrogIntegrator;
 
