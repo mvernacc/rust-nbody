@@ -2,11 +2,9 @@ name: nbody_pull_request_checks
 
 on:
   push:
-    branches:
-      - 'main'
-    pull_request:
-      branches:
-        - '**'
+    branches: [main]
+  pull_request:
+    branches: ['**']
 
 jobs:
   check:
