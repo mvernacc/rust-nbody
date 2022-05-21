@@ -8,7 +8,7 @@ on:
 
 jobs:
   check:
-    name: Check
+    name: Rust check, lint and tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -17,38 +17,10 @@ jobs:
           profile: minimal
           toolchain: stable
           override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: check
-          args: --manifest-path nbody/Cargo.toml
-
-  test:
-    name: Rust Test Suite
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --manifest-path nbody/Cargo.toml
-
-  clippy:
-    name: Clippy (Rust linter)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
-      - run: rustup component add clippy
-      - uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: --manifest-path nbody/Cargo.toml -- -D warnings
+          components: clippy
+      - name: Check
+        run: cd nbody; cargo check
+      - name: Lint with clippy
+        run: cd nbody; cargo clippy -- -D warnings
+      - name: Tests
+        run: cd nbody; cargo test
