@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: ['**']
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   check:
     name: Rust check, lint and tests
