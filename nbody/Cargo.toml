@@ -14,3 +14,10 @@ serde_json = { version = "1.0.80" }
 ndarray = { version = "0.15.4"}
 approx = "0.5.1"
 csv = "1"
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "calc_grav_force_two_bodies_benchmark"
+harness = false
