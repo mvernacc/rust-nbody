@@ -1,3 +1,6 @@
+"""
+Plotting tools for the n-body simulator.
+"""
 import click
 import pandas as pd
 from matplotlib import pyplot as plt
@@ -8,6 +11,13 @@ NUM_COLUMNS_PER_BODY = 9
 @click.command()
 @click.argument("result_file", type=click.File("r"))
 def plot_nbody_result(result_file):
+    """
+    Plot the results of an n-body simulation.
+
+    Args:
+
+        result_file: comma-separated value file output by the nbody Rust code.
+    """
     df = pd.read_csv(result_file)
     n_bodies = (len(df.columns) - 1) // NUM_COLUMNS_PER_BODY
     body_names = [
