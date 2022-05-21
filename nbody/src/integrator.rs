@@ -4,16 +4,28 @@ use ndarray::{Array, Array1, Array2};
 use super::NBodyInput;
 use super::gravity;
 
+/// Integrates the gravitational n-body equations of motion using the Leapfrog algorithm.
 pub struct LeapfrogIntegrator {
+    /// Time between steps [units: s].
     pub dt: f64,
+    /// Number of time steps to simulate for.
     pub n_steps: usize,
+    /// Number of scalar states in the leapfrog algorithm, this is 3 times the number of bodies.
     pub n_states: usize,
+    /// The mass of each body in the simulation [units: kg].
     pub masses: Array1<f64>,
+    /// The time since simulation start at each step [units: s].
     pub t: Array1<f64>,
+    /// The 3-d position vectors of each body, concatenated together, at each timestep [units: m].
+    /// `r[[i, 3 * j + k]]` is the position at timestep `i` of body `j` in dimension `k`.
     pub r: Array2<f64>,
+    /// Velocities of each body at each timestep [units: m s^-1].
+    /// Indexing is the same as for `r`.
     pub v: Array2<f64>,
+    /// Accelerations of each body at each timestep [units: m s^-2].
+    /// Indexing is the same as for `r`.
     pub a: Array2<f64>,
-    /// `forces[i, j, k]` is the gravitational force between bodies `i` and `j` along direction `k`.
+    /// `forces[[i, j, k]]` is the gravitational force between bodies `i` and `j` along direction `k`.
     /// Used internally to avoid repeated calculations; overwritten at each time step.
     /// [units: N]
     forces: Array3<f64>,

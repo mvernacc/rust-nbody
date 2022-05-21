@@ -2,6 +2,15 @@
 const G: f64 = 6.6743015e-11;
 
 /// Calculate the gravitational force of body 2 on body 1.
+/// 
+/// The position vectors must be given in the same reference frame, and the
+/// force vector is returned in that frame.
+/// 
+/// Arguments:
+/// * `mass_1`: Mass of body 1 [units: kg].
+/// * `mass_2`: Mass of body 2 [units: kg].
+/// * `r_1`: Position vector of body 1 [units: m].
+/// * `r_2`: Position vector of body 2 [units: m].
 pub fn calc_grav_force_two_bodies(mass_1: f64, mass_2: f64, r_1: [f64; 3], r_2: [f64; 3]) -> [f64; 3] {
     // Position vector from body 1 center to body 2 center [units: m].
     let r_1to2 = [r_1[0] - r_2[0], r_1[1] - r_2[1], r_1[2] - r_2[2]];
