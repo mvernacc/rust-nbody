@@ -1,12 +1,9 @@
 use std::{fs::File, io::BufReader, error::Error};
 
 use clap::Parser;
-use serde::{Deserialize, Serialize};
 use ndarray::{Array, Array1, Array2};
 
-mod gravity;
-mod integrator;
-use crate::integrator::LeapfrogIntegrator;
+use nbody::{NBodyInput, integrator::LeapfrogIntegrator};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -15,21 +12,6 @@ struct Args {
     bodies_path: std::path::PathBuf,
     /// Path to write output file.
     output_path: std::path::PathBuf,
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Body {
-    pub name: String,
-    pub mass_kg: f64,
-    pub position_init_m: [f64; 3],
-    pub velocity_init_m_per_s: [f64; 3],
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct NBodyInput {
-    pub bodies: Vec<Body>,
-    pub timestep_s: f64,
-    pub n_steps: usize,
 }
 
 /// Write the simulation results to a comma-separated value file
