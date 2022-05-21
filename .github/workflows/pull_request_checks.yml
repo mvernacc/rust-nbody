@@ -1,0 +1,29 @@
+name: nbody_pull_request_checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: ['**']
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check:
+    name: Rust check, lint and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+      - name: Check
+        run: cd nbody; cargo check
+      - name: Lint with clippy
+        run: cd nbody; cargo clippy -- -D warnings
+      - name: Tests
+        run: cd nbody; cargo test

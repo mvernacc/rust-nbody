@@ -1,4 +1,6 @@
 # rust-nbody
+![pull request checks workflow badge](https://github.com/mvernacc/rust-nbody/actions/workflows/pull_request_checks.yml/badge.svg)
+
 Rust practice making a gravitational n-body solver.
 
 ## Installation
