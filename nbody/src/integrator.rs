@@ -9,6 +9,7 @@ pub struct LeapfrogIntegrator {
     pub n_steps: usize,
     pub n_states: usize,
     pub masses: Array1<f64>,
+    pub t: Array1<f64>,
     pub r: Array2<f64>,
     pub v: Array2<f64>,
     pub a: Array2<f64>,
@@ -25,6 +26,7 @@ impl LeapfrogIntegrator {
         let dt = input.timestep_s;
         let n_steps = input.n_steps;
 
+        let t: Array1<f64> = Array::range(0.0, dt * (n_steps as f64), dt);
         let mut masses: Array1<f64> = Array::zeros(n_bodies);
         let mut r: Array2<f64> = Array::zeros((input.n_steps, n_states));
         let mut v: Array2<f64> = Array::zeros((input.n_steps, n_states));
@@ -43,7 +45,8 @@ impl LeapfrogIntegrator {
             dt,
             n_steps,
             n_states,
-            masses: masses.clone(),
+            masses,
+            t,
             r,
             v,
             a,
@@ -64,7 +67,6 @@ impl LeapfrogIntegrator {
         let mut v_current: Array1<f64> = Array::zeros(self.n_states);
 
         // Compute accelerations at the initial conditions.
-        // TODO
         self.update_accelerations(0);
 
         for i in 0..self.n_steps - 1 {
@@ -77,7 +79,6 @@ impl LeapfrogIntegrator {
             );
 
             // Compute accelerations at the next time step i + 1.
-            // TODO
             self.update_accelerations(i + 1);
 
             // Compute velocities at the next time step i + 1.
