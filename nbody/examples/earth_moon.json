@@ -9,10 +9,10 @@
         {
             "name": "Moon",
             "mass_kg": 7.34767309e22,
-            "position_init_m": [383396e3, 0.0, 0.0],
-            "velocity_init_m_per_s": [0.0, 1.07e3, 0.0]
+            "position_init_m": [0.3633e9, 0.0, 0.0],
+            "velocity_init_m_per_s": [0.0, 1.082e3, 0.0]
         }
     ],
     "timestep_s": 100,
-    "n_steps": 10
+    "n_steps": 23605
 }
