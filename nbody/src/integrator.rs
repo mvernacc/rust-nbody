@@ -110,22 +110,19 @@ impl LeapfrogIntegrator {
             // Compute the net gravitational force on this body.
             let mut force_net: [f64; 3] = [0.0, 0.0, 0.0];
             for j in 0..i {
-                #[allow(clippy::needless_range_loop)]
-                for k in 0..3 {
-                    force_net[k] += self.forces[[i, j, k]];
+                for (k, f_k) in force_net.iter_mut().enumerate() {
+                    *f_k += self.forces[[i, j, k]];
                 }
             }
             for j in i + 1..n_bodies {
-                #[allow(clippy::needless_range_loop)]
-                for k in 0..3 {
-                    force_net[k] -= self.forces[[j, i, k]];
+                for (k, f_k) in force_net.iter_mut().enumerate() {
+                    *f_k -= self.forces[[j, i, k]];
                 }
             }
 
             // Update the acceleration of this body using F = m a.
-            #[allow(clippy::needless_range_loop)]
-            for k in 0..3 {
-                self.a[[step_index, 3 * i + k]] = force_net[k] / self.masses[i];
+            for (k, f_k) in force_net.iter().enumerate() {
+                self.a[[step_index, 3 * i + k]] = f_k / self.masses[i];
             }
         }
     }
@@ -141,19 +138,16 @@ impl LeapfrogIntegrator {
         let mut r_j: [f64; 3] = Default::default();
 
         for i in 0..n_bodies {
-            #[allow(clippy::needless_range_loop)]
-            for k in 0..3 {
-                r_i[k] = self.r[[step_index, 3 * i + k]];
+            for (k, r_ik) in r_i.iter_mut().enumerate() {
+                *r_ik = self.r[[step_index, 3 * i + k]];
             }
             for j in 0..i {
-                #[allow(clippy::needless_range_loop)]
-                for k in 0..3 {
-                    r_j[k] = self.r[[step_index, 3 * j + k]];
+                for (k, r_jk) in r_j.iter_mut().enumerate()  {
+                    *r_jk = self.r[[step_index, 3 * j + k]];
                 }
                 let f_ij = gravity::calc_grav_force_two_bodies(self.masses[i], self.masses[j], r_i, r_j);
-                #[allow(clippy::needless_range_loop)]
-                for k in 0..3 {
-                    self.forces[[i, j, k]] = f_ij[k];
+                for (k, f_ijk) in f_ij.iter().enumerate() {
+                    self.forces[[i, j, k]] = *f_ijk;
                 }
             }
         }
